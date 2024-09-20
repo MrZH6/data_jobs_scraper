@@ -17,6 +17,7 @@ import time
 #  - doplnit plat
 # TODO: headers do dictionary - {col: name, col_width}
 # TODO: sjednotit datum inzerátu
+# TODO: paralelizovat requesty
 
 
 start_time = time.time()
@@ -57,21 +58,15 @@ def jobs():
                     break
 
                 for job in soup.find_all('article', class_='SearchResultCard'):
-
                     title = job.find('header', class_='SearchResultCard__header').find('h2', class_="SearchResultCard__title").get_text(strip=True)
-
                     company = job.find('footer', class_='SearchResultCard__footer').find('li', class_="SearchResultCard__footerItem").get_text(strip=True)
-
                     location = job.find('footer', class_='SearchResultCard__footer').find('li', {"data-test" : "serp-locality"}).get_text(strip=True)
-
                     job_url = job.find('header', class_='SearchResultCard__header').find('a', class_='link-primary SearchResultCard__titleLink').get('href')
-
                     insert_date = job.find('header', class_='SearchResultCard__header').find('div', class_="SearchResultCard__status").get_text(strip=True)
-
                     pay_tag = job.find('div', class_='SearchResultCard__body').find('span', class_='Tag Tag--success Tag--small Tag--subtle')
                     pay = pay_tag.get_text(strip=True) if pay_tag else None
 
-                    if insert_date == "Příležitost dne":
+                    if insert_date == "Příležitost dne" or insert_date == 'Doporučujeme':
                         tag = "HOT"
                     elif insert_date == "Přidáno dnes" or insert_date == "Přidáno včera":
                         tag = "NEW"
