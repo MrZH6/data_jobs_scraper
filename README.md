@@ -10,3 +10,4 @@ For each job, it tries to get more information, if available.
 - [COCUMA](https://www.cocuma.cz/)
 - [Welcome to the Jungle](https://www.welcometothejungle.com/cs)
 - [futureproof](https://fproof.eu/)
+- [cooljobs](https://www.cooljobs.eu/cz)

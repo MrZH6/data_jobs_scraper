@@ -15,9 +15,14 @@ import time
 #  - location beru pouze první město
 #  - odebrat query parametr a procházet všechny pozice
 #  - doplnit plat
+# TODO cooljobs.eu:
+#  - doplnit další requesty --> data-nextdata
+#  - je vždy měsíční plat? pokud ne upravit string slicing!
+# TODO: upravit strukturu ostatních funkcí dle cooljobs
 # TODO: headers do dictionary - {col: name, col_width}
+# TODO: doplnit další portály: jenprace.cz, jobstack.it
 # TODO: sjednotit datum inzerátu
-# TODO: paralelizovat requesty
+# TODO: paralelizovat requesty ??
 
 
 start_time = time.time()
@@ -172,28 +177,6 @@ def cocuma():
     print(f"cocuma.cz jobs found: {job_count}")
     return job_list
 
-def futureproof():
-    job_list, job_count = [], 0
-    url = "https://jobs.fproof.eu/recruit/v2/public/Job_Openings?pagename=Careers&source=CareerSite"
-
-    response = requests.request("GET", url)
-    data = response.json()
-    for job in data["data"]:
-        title = job["Posting_Title"]
-        location = job["City"]
-        job_url = job["$url"]
-        shifts = job["Job_Type"]
-        insert_date = job["Date_Opened"]
-
-        if title and (re.search(PATTERN_1, title) or re.search(PATTERN_2, title)):
-            job_count += 1
-            # portal, job_count, title, job_url, company, location, shifts, insert_date, tag, pay
-            job_list.append(["fproof.eu", job_count, title, job_url, None, location, shifts, insert_date, None, None])
-            print(f"{title}")
-
-    print(f"fproof.eu jobs found: {job_count}")
-    return job_list
-
 def welcome_to_the_jungle(api_key, application_id):
     job_list, job_count = [], 0
     url = "https://csekhvms53-dsn.algolia.net/1/indexes/*/queries?search_origin=job_search_client"
@@ -242,6 +225,56 @@ def welcome_to_the_jungle(api_key, application_id):
     print(f"welcometothejungle.com jobs found: {job_count}")
     return job_list
 
+def futureproof():
+    job_list, job_count = [], 0
+    url = "https://jobs.fproof.eu/recruit/v2/public/Job_Openings?pagename=Careers&source=CareerSite"
+
+    response = requests.request("GET", url)
+    data = response.json()
+    for job in data["data"]:
+        title = job["Posting_Title"]
+        location = job["City"]
+        job_url = job["$url"]
+        shifts = job["Job_Type"]
+        insert_date = job["Date_Opened"]
+
+        if title and (re.search(PATTERN_1, title) or re.search(PATTERN_2, title)):
+            job_count += 1
+            # portal, job_count, title, job_url, company, location, shifts, insert_date, tag, pay
+            job_list.append(["fproof.eu", job_count, title, job_url, None, location, shifts, insert_date, None, None])
+            print(f"{title}")
+
+    print(f"fproof.eu jobs found: {job_count}")
+    return job_list
+
+def cooljobs():
+    job_list, job_count = [], 0
+    url = "https://www.cooljobs.eu/cz/hledat-pozici/1096.html"
+
+    html_content = fetch_jobs_data(url)
+
+    if html_content:
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        for job in soup.find_all('a', class_='row'):
+            portal = "cooljobs.eu"
+            title = job.find('div', class_='col col-pozice').get_text(strip=True)
+            job_url = "https://www.cooljobs.eu/cz/" + job.attrs["href"]
+            company = None
+            location = job.find('div', class_='col col-misto').get_text(strip=True)[len("Místo:"):]
+            shifts = job.find('div', class_='col col-request_type').get_text(strip=True)[len("Smlouva:"):]
+            insert_date = None
+            tag = None
+            pay = job.find('div', class_='col col-mesicne').get_text(strip=True)[len("Měsíčně:"):]
+
+            if re.search(PATTERN_1, title) or re.search(PATTERN_2, title):
+                print(f"{title} | {company}")
+                job_count += 1
+                job_list.append([portal, job_count, title, job_url, company, location, shifts, insert_date, tag, pay])
+
+        print(f"{portal} jobs found: {job_count}")
+        return job_list
+
 # load credentials
 with open("credentials.json", 'r') as file:
     credentials = json.load(file)
@@ -250,8 +283,9 @@ with open("credentials.json", 'r') as file:
 jobs_all = jobs()
 jobs_all += startupjobs()
 jobs_all += cocuma()
-jobs_all += futureproof()
 jobs_all += welcome_to_the_jungle(credentials["welcome_to_the_jungle"]["api_key"], credentials["welcome_to_the_jungle"]["application_id"])
+jobs_all += futureproof()
+jobs_all += cooljobs()
 
 with open('output/jobs.csv', mode='w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
