@@ -1,7 +1,7 @@
 # TODO list
 
 ## 🔥 Important
-- přidat info o stacku !!
+- přidat info o stacku
 - **cooljobs:** doplnit další requesty --> data-nextdata
 - upravit strukturu ostatních funkcí dle cooljobs
 

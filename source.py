@@ -233,31 +233,49 @@ def futureproof():
 
 def cooljobs():
     job_list, job_count = [], 0
+    first_call, nextdata = True, None
     url = "https://www.cooljobs.eu/cz/hledat-pozici/1096.html"
+    portal = "cooljobs.eu"
 
-    html_content = fetch_jobs_data(url)
+    while True:
+        if first_call:
+            html_content = fetch_jobs_data(url)
+        else:
+            payload = {'action': 'FeedNext', 'nextdata': nextdata}
+            response = requests.request("POST", url, data=payload, timeout=10)
+            response_json = response.json()
+            html_content = response_json["html"]
+            nextdata = response_json["nextdata"]
 
-    if html_content:
-        soup = BeautifulSoup(html_content, 'html.parser')
+        if html_content:
+            soup = BeautifulSoup(html_content, 'html.parser')
 
-        for job in soup.find_all('a', class_='row'):
-            portal = "cooljobs.eu"
-            title = job.find('div', class_='col col-pozice').get_text(strip=True)
-            job_url = "https://www.cooljobs.eu/cz/" + job.attrs["href"]
-            company = None
-            location = job.find('div', class_='col col-misto').get_text(strip=True)[len("Místo:"):]
-            shifts = job.find('div', class_='col col-request_type').get_text(strip=True)[len("Smlouva:"):]
-            insert_date = None
-            tag = None
-            pay = job.find('div', class_='col col-mesicne').get_text(strip=True)[len("Měsíčně:"):]
+            for job in soup.find_all('a', class_='row'):
+                title = job.find('div', class_='col col-pozice').get_text(strip=True)
+                job_url = "https://www.cooljobs.eu/cz/" + job.attrs["href"]
+                company = None
+                location = job.find('div', class_='col col-misto').get_text(strip=True)[len("Místo:"):]
+                shifts = job.find('div', class_='col col-request_type').get_text(strip=True)[len("Smlouva:"):]
+                insert_date = None
+                tag = None
+                pay = job.find('div', class_='col col-mesicne').get_text(strip=True)[len("Měsíčně:"):]
 
-            if re.search(PATTERN_1, title) or re.search(PATTERN_2, title):
-                print(f"{title} | {company}")
-                job_count += 1
-                job_list.append([portal, job_count, title, job_url, company, location, shifts, insert_date, tag, pay])
+                if re.search(PATTERN_1, title) or re.search(PATTERN_2, title):
+                    print(f"{title} | {company}")
+                    job_count += 1
+                    job_list.append([portal, job_count, title, job_url, company, location, shifts, insert_date, tag, pay])
 
-        print(f"{portal} jobs found: {job_count}")
-        return job_list
+            if first_call:
+                nextdata = soup.find('p', id="feed_loadnext").attrs["data-nextdata"]
+                first_call = False
+        else:
+            break
+
+        if nextdata == "":
+            break
+
+    print(f"{portal} jobs found: {job_count}")
+    return job_list
 
 # load credentials
 with open("credentials.json", 'r') as file:
