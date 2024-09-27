@@ -8,22 +8,6 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill
 import time
 
-# TODO: Jobs.cz:
-#  - přidat města
-#  - procházet všechny nabídky ??
-# TODO: Welcome to The Jungle:
-#  - location beru pouze první město
-#  - odebrat query parametr a procházet všechny pozice
-#  - doplnit plat
-# TODO cooljobs.eu:
-#  - doplnit další requesty --> data-nextdata
-#  - je vždy měsíční plat? pokud ne upravit string slicing!
-# TODO: upravit strukturu ostatních funkcí dle cooljobs
-# TODO: headers do dictionary - {col: name, col_width}
-# TODO: doplnit další portály: jenprace.cz, jobstack.it
-# TODO: sjednotit datum inzerátu
-# TODO: paralelizovat requesty ??
-
 
 start_time = time.time()
 
